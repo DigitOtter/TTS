@@ -1,25 +1,36 @@
 import logging
 import re
 import subprocess
+import os
 from typing import Dict, List
 
 from TTS.tts.utils.text.phonemizers.base import BasePhonemizer
 from TTS.tts.utils.text.punctuation import Punctuation
 
 
-def is_tool(name):
+def is_tool(name, path=None):
     from shutil import which
 
-    return which(name) is not None
+    return which(name, path=path) is not None
+
+def find_tool(name, path=None):
+    from shutil import which
+
+    tool = which(name, path=path)
+    if tool:
+        return tool, path
+    
+    # If no custom install was found, try and locate default tool
+    tool = which(name, path=None)
+    return tool, None
 
 
 # priority: espeakng > espeak
-if is_tool("espeak-ng"):
-    _DEF_ESPEAK_LIB = "espeak-ng"
-elif is_tool("espeak"):
-    _DEF_ESPEAK_LIB = "espeak"
-else:
-    _DEF_ESPEAK_LIB = None
+_DEF_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'espeak')
+
+_DEF_ESPEAK_LIB, _DEF_ESPEAK_DATA_PATH = find_tool('espeak-ng', _DEF_PATH)
+if not _DEF_ESPEAK_LIB:
+    _DEF_ESPEAK_LIB, _DEF_ESPEAK_DATA_PATH = find_tool('espeak', _DEF_PATH)
 
 
 def _espeak_exe(espeak_lib: str, args: List, sync=False) -> List[str]:
@@ -30,6 +41,9 @@ def _espeak_exe(espeak_lib: str, args: List, sync=False) -> List[str]:
         "-b",
         "1",  # UTF8 text encoding
     ]
+    # Check if custom data path is defined
+    if _DEF_ESPEAK_DATA_PATH:
+        cmd.append("--path=" + _DEF_ESPEAK_DATA_PATH)
     cmd.extend(args)
     logging.debug("espeakng: executing %s", repr(cmd))
 
@@ -107,15 +121,13 @@ class ESpeak(BasePhonemizer):
 
     @backend.setter
     def backend(self, backend):
-        if backend not in ["espeak", "espeak-ng"]:
+        if not 'espeak' in backend.lower():
             raise Exception("Unknown backend: %s" % backend)
         self._ESPEAK_LIB = backend
 
     def auto_set_espeak_lib(self) -> None:
-        if is_tool("espeak-ng"):
-            self._ESPEAK_LIB = "espeak-ng"
-        elif is_tool("espeak"):
-            self._ESPEAK_LIB = "espeak"
+        if _DEF_ESPEAK_LIB:
+            self._ESPEAK_LIB = _DEF_ESPEAK_LIB
         else:
             raise Exception("Cannot set backend automatically. espeak-ng or espeak not found")
 
@@ -217,7 +229,7 @@ class ESpeak(BasePhonemizer):
     @classmethod
     def is_available(cls):
         """Return true if ESpeak is available else false"""
-        return is_tool("espeak") or is_tool("espeak-ng")
+        return _DEF_ESPEAK_LIB is not None
 
 
 if __name__ == "__main__":
