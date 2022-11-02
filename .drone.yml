@@ -1,9 +1,9 @@
 kind: pipeline
-type: exec
-name: win_build
+type: docker
+name: linux_build
 
 platform:
-  os: windows
+  os: linux
   arch: amd64
 
 clone:
@@ -11,24 +11,14 @@ clone:
 
 trigger:
   branch:
-  - server-gui-win
+  - server-gui
 
 steps:
 - name: build
   commands:
   - python -m venv venv
-  - .\venv\Scripts\activate
+  - .\venv\bin\activate
   - pip install wheel
   - pip install .
   - pip install torch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0
-  
-- name: run_pyinstaller
-  commands:
-  - .\venv\Scripts\activate
-  - pip install pyinstaller
-  - cd install
-  - .\build_win.bat
 
-- name: copy_hack
-  commands:
-  - 'cp install/dist/tts_server_wrapper.exe C:\Drone\tts-server.exe'
