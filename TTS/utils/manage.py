@@ -77,7 +77,7 @@ class ModelManager(object):
         print(" Name format: language/dataset/model")
         models_name_list = []
         model_count = 1
-        model_type = "tts_models"
+        model_type = model_type
         models_name_list.extend(self._list_models(model_type, model_count))
         return [name.replace(model_type + "/", "") for name in models_name_list]
 
