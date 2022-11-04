@@ -192,7 +192,7 @@ def speaker_ids():
     return speaker_manager.name_to_id if speaker_manager else {}
 
 
-@app.route("api/is_running", methods=["GET"])
+@app.route("/api/is_running", methods=["GET"])
 def speaker_ids():
     return {}
 
