@@ -193,7 +193,7 @@ def speaker_ids():
 
 
 @app.route("/api/is_running", methods=["GET"])
-def speaker_ids():
+def is_running():
     return {}
 
 
