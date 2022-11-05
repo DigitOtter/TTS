@@ -4,12 +4,12 @@ import io
 import json
 import os
 import sys
-import multiprocessing
 from pathlib import Path
 from threading import Lock
 from typing import Union
 
 from flask import Flask, render_template, request, send_file
+import multiprocessing
 
 from TTS.config import load_config
 from TTS.utils.manage import ModelManager
@@ -208,16 +208,9 @@ def start_server(q: multiprocessing.Queue) -> None:
     app.run(debug=args.debug, host="::", port=args.port)
 
 
-def main(run_in_subproc=True):
-    if run_in_subproc:
-        q = multiprocessing.Queue()
-        p = multiprocessing.Process(target=start_server, args=(q,))
-        p.start()
-        q.get(block=True)
-        p.terminate()
-    else:
-        app.run(debug=args.debug, host="::", port=args.port)
+def main():
+    app.run(debug=args.debug, host="::", port=args.port)
 
 
 if __name__ == "__main__":
-    main(args.subproc)
+    main()
