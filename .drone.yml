@@ -16,18 +16,11 @@ trigger:
 steps:
 - name: build
   commands:
-  - python -m venv venv
-  - .\venv\Scripts\activate
-  - pip install wheel
-  - pip install .
-  - pip install torch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0
+  - .\install\pip_build_win.bat
   
 - name: run_pyinstaller
   commands:
-  - .\venv\Scripts\activate
-  - pip install pyinstaller
-  - cd install
-  - .\build_win.bat
+  - .\install\pyinstaller_win.bat
 
 - name: copy_hack
   commands:
