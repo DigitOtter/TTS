@@ -4,6 +4,7 @@ import io
 import json
 import os
 import sys
+import multiprocessing
 from pathlib import Path
 from threading import Lock
 from typing import Union
@@ -56,6 +57,7 @@ def create_argparser():
     parser.add_argument("--use_cuda", type=convert_boolean, default=False, help="true to use CUDA.")
     parser.add_argument("--debug", type=convert_boolean, default=False, help="true to enable Flask debug mode.")
     parser.add_argument("--show_details", type=convert_boolean, default=False, help="Generate model detail page.")
+    parser.add_argument("--subproc", type=convert_boolean, default=False, help="Run in subprocess. Allows remote shutdown.")
     return parser
 
 
@@ -197,9 +199,25 @@ def is_running():
     return {}
 
 
-def main():
+def start_server(q: multiprocessing.Queue) -> None:
+    @app.route("/api/shutdown", methods=["GET"])
+    def shutdown():
+        q.put("shutdown")
+        return 'Server shutting down...'
+    
     app.run(debug=args.debug, host="::", port=args.port)
 
 
+def main(run_in_subproc=True):
+    if run_in_subproc:
+        q = multiprocessing.Queue()
+        p = multiprocessing.Process(target=start_server, args=(q,))
+        p.start()
+        q.get(block=True)
+        p.terminate()
+    else:
+        app.run(debug=args.debug, host="::", port=args.port)
+
+
 if __name__ == "__main__":
-    main()
+    main(args.subproc)
